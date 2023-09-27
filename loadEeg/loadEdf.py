@@ -79,12 +79,14 @@ def _getChannelIndices(channels: list[str], electrodes: tuple[str] = ELECTRODES,
             for i, elec in enumerate(electrode):
                 electrode[i] = _electrodeSynonymRegex(elec)
 
+        # Regex on channel name
+        if inputMontage == Montage.MONOPOLAR:
+            regExToFind = r'(EEG )?{}(-REF)?'.format(electrode)
+        elif inputMontage == Montage.BIPOLAR:
+            regExToFind = electrode[0] + r'.*(-)?.*' + electrode[1]
+
+        # Find corresponding channel
         for i, channel in enumerate(channels):
-            # Regex on channel name
-            if inputMontage == Montage.MONOPOLAR:
-                regExToFind = r'(EEG )?{}(-REF)?'.format(electrode)
-            elif inputMontage == Montage.BIPOLAR:
-                regExToFind = electrode[0] + r'.*(-)?.*' + electrode[1]
             if re.search(regExToFind, channel, flags=re.IGNORECASE):
                 found = True
                 break
@@ -317,14 +319,15 @@ def standardizeDataset(rootDir: str, outDir: str, electrodes: tuple[str] = ELECT
         ValueError: if outDataFrameFormat is unknown.
     """
     # Go through all files
-    edfFiles = glob.iglob(os.path.join(rootDir, '**/*.edf'), recursive=True)
+    # edfFiles = glob.iglob(os.path.join(rootDir, '**/*.edf'), recursive=True)
+    edfFiles = np.sort(glob.glob(os.path.join(rootDir, '**/*.edf'), recursive=True))
     for edfFile in edfFiles:
         try:
             if outFormat == Format.EDF:
-                outFile = os.path.join(outDir, edfFile[len(rootDir):])
+                outFile = os.path.join(outDir, edfFile[len(rootDir)+1:])
                 standardizeFileToEdf(edfFile, outFile, electrodes, fs, inputMontage, ref)
             elif outFormat in DATAFRAME_FORMATS:
-                outFile = os.path.join(outDir, edfFile[len(rootDir):-3] + outFormat)
+                outFile = os.path.join(outDir, edfFile[len(rootDir)+1:-3] + outFormat)
                 standardizeFileToDataFrame(edfFile, outFile, electrodes, fs, inputMontage, ref, outFormat)
             else:
                 raise ValueError('Unknown output format {}'.format(outFormat))

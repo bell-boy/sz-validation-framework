@@ -110,6 +110,22 @@ def evaluate2AnnotationFiles(refFilename: str, hypFilename: str, annotationsInTr
 
     return pd.DataFrame(results)
 
+def setScoresToNan(scoresEvent, scoresSample):
+    scoresEvent.sensitivity=np.nan
+    scoresEvent.precision=np.nan
+    scoresEvent.f1=np.nan
+    scoresEvent.fp =np.nan
+    scoresEvent.refTrue =np.nan
+    scoresEvent.fpRate =np.nan
+
+    scoresSample.sensitivity=np.nan
+    scoresSample.precision=np.nan
+    scoresSample.f1=np.nan
+    scoresSample.fp =np.nan
+    scoresSample.refTrue =np.nan
+
+    return (scoresEvent, scoresSample)
+
 # def  recalculatePerfPerSubject(performancePerFile, subjects, labelFreq):
 def recalculatePerfPerSubject(performancePerFileName, subjects, labelFreq, params):
     ''' Uses output from evaluate2AnnotationFiles which contains performance per each file of the dataset,
@@ -150,18 +166,21 @@ def recalculatePerfPerSubject(performancePerFileName, subjects, labelFreq, param
     for patIndx, pat in enumerate(subjects):
         dataThisSubj = performancePerFile.loc[performancePerFile['filepath'].str.contains(pat, case=False)].reset_index( drop=True)
         nSamples = int(np.sum(dataThisSubj.duration.to_numpy()))
-        events = [(1, 3), (6, 9)]  # just sth random
-        ref = Annotation(events, labelFreq, nSamples)
-        scoresEvent = scoring.EventScoring(ref, ref, params)
-        scoresEvent.refTrue = np.sum(dataThisSubj.Event_numEvents.to_numpy())
-        scoresEvent.tp = np.sum(dataThisSubj.Event_numTP.to_numpy())
-        scoresEvent.fp = np.sum(dataThisSubj.Event_numFP.to_numpy())
-        scoresEvent.computeScores()
-        scoresSample = scoring.SampleScoring(ref, ref)
-        scoresSample.refTrue = np.sum(dataThisSubj.Sample_numEvents.to_numpy())
-        scoresSample.tp = np.sum(dataThisSubj.Sample_numTP.to_numpy())
-        scoresSample.fp = np.sum(dataThisSubj.Sample_numFP.to_numpy())
-        scoresSample.computeScores()
+        if (nSamples!=0):
+            events = [(1, 3), (6, 9)]  # just sth random
+            ref = Annotation(events, labelFreq, nSamples)
+            scoresEvent = scoring.EventScoring(ref, ref, params)
+            scoresEvent.refTrue = np.sum(dataThisSubj.Event_numEvents.to_numpy())
+            scoresEvent.tp = np.sum(dataThisSubj.Event_numTP.to_numpy())
+            scoresEvent.fp = np.sum(dataThisSubj.Event_numFP.to_numpy())
+            scoresEvent.computeScores()
+            scoresSample = scoring.SampleScoring(ref, ref)
+            scoresSample.refTrue = np.sum(dataThisSubj.Sample_numEvents.to_numpy())
+            scoresSample.tp = np.sum(dataThisSubj.Sample_numTP.to_numpy())
+            scoresSample.fp = np.sum(dataThisSubj.Sample_numFP.to_numpy())
+            scoresSample.computeScores()
+        else: #usually this means that for that subj there was no ssizures in test
+            (scoresEvent, scoresSample)= setScoresToNan(scoresEvent, scoresSample)
 
         results['subject'].append(pat)
         results['duration'].append(nSamples)
@@ -313,17 +332,18 @@ def extractTrainFiles( annotationsTrue, minHoursTrain, subj):
     timeLeft=minHoursTrain*3600
     l=0
     while l< len(thisSubj.index): #go through rows
+        # find rows with this file
+        # rows = thisSubj.loc[thisSubj['session'] == thisSubj['session'][l] ].reset_index(drop=True)
+        # rows = rows.loc[rows['recording'] == thisSubj['recording'][  l]].reset_index(drop=True)
+        # sometimes the different files have same session and recording so need to do it over filename
+        rows = thisSubj.loc[thisSubj['filepath'] == thisSubj['filepath'][l]].reset_index(drop=True)
         if (thisSubj['duration'][l]<= timeLeft): #full file can be used
-            #find rows with this file
-            rows = thisSubj.loc[thisSubj['session'] == thisSubj['session'][l] ].reset_index(drop=True)
-            rows = rows.loc[rows['recording'] == thisSubj['recording'][  l]].reset_index(drop=True)
             # annotationsInTrain = pd.concat([annotationsInTrain, thisSubj.loc[[0]]], axis=0)
             annotationsInTrain = pd.concat([annotationsInTrain, rows], axis=0)
             timeLeft=timeLeft - thisSubj['duration'][l]
             l=l+ len(rows.index)
         else: #if session should be split
-            rows = thisSubj.loc[thisSubj['session'] == thisSubj['session'][l]].reset_index(drop=True)
-            rows = rows.loc[rows['recording'] == thisSubj['recording'][l]].reset_index(drop=True)
+
             rows = rows.loc[ rows['endTime']<timeLeft]
             annotationsInTrain = pd.concat([annotationsInTrain, rows], axis=0)
             break

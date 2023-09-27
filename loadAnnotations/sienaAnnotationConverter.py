@@ -66,7 +66,7 @@ def _loadSeizures(edfFile: str, subject: str, correctedEdfFileName: str) -> list
                         _ = summary.readline()
                         seizures.append((_substractTimeStamps(start, registrationStart),
                                         (_substractTimeStamps(end, registrationStart))))
-                elif correctedEdfFileName == 'PN00-3.edf':  # seizure last 1hour
+                elif correctedEdfFileName == 'PN00-3.edf': # seizure last 1hour
                     registrationStart = _parseTimeStamp(firstLine)
                     _ = summary.readline()
                     start = _parseTimeStamp(summary.readline())
@@ -230,6 +230,14 @@ def convertAnnotationsEdf(rootDir: str, edfFile: str, outFile: str = None) -> pd
 
     return annotationDf
 
+def checkIfRawDataExists(annotationsDf, dataFolder):
+    annotationsDf=annotationsDf.reset_index(drop=True)
+    rowsToDrop=[]
+    for indx, row in annotationsDf.iterrows():
+        fileName=row['filepath']
+        if not os.path.isfile(dataFolder+ '/'+ fileName):
+            rowsToDrop.append(indx)
+    return annotationsDf.drop(rowsToDrop)
 
 def convertAnnotationsSubject(rootDir: str, subject: str, outFile: str = None) -> pd.DataFrame:
     """Loads annotations related to a subject in the Siena dataset. The annotations are returned as a pandas DataFrame

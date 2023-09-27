@@ -210,6 +210,14 @@ def convertAllAnnotations(rootDir: str, outFile: str = None) -> pd.DataFrame:
 
     return annotationDf
 
+def checkIfRawDataExists(annotationsDf, dataFolder):
+    annotationsDf=annotationsDf.reset_index(drop=True)
+    rowsToDrop=[]
+    for indx, row in annotationsDf.iterrows():
+        fileName=row['filepath']
+        if not os.path.isfile(dataFolder+ '/'+ fileName):
+            rowsToDrop.append(indx)
+    return annotationsDf.drop(rowsToDrop)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
