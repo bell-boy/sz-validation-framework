@@ -21,6 +21,12 @@ BIPOLAR_DBANANA = ('Fp1-F3', 'F3-C3', 'C3-P3', 'P3-O1', 'Fp1-F7', 'F7-T3', 'T3-T
                    'Fp2-F4', 'F4-C4', 'C4-P4', 'P4-O2', 'Fp2-F8', 'F8-T4', 'T4-T6', 'T6-O2')
 ELECTRODES = ('Fp1', 'F3', 'C3', 'P3', 'O1', 'F7', 'T3', 'T5', 'Fz', 'Cz', 'Pz',
               'Fp2', 'F4', 'C4', 'P4', 'O2', 'F8', 'T4', 'T6')
+
+CHANNELS_CHB_MIT = ('FP1-F7', 'F7-T7', 'T7-P7', 'P7-O1', 'FP1-F3', 'F3-C3', 'C3-P3', 'P3-O1', 'FP2-F4', 'F4-C4', 'C4-P4', 
+                    'P4-O2', 'FP2-F8', 'F8-T8', 'T8-P8', 'P8-O2', 'FZ-CZ', 'CZ-PZ', 'P7-T7', 'T7-FT9', 'FT9-FT10', 'FT10-T8', 'T8-P8')
+
+ELECTRODES_CHB_MIT = ('FP1', 'F7', 'T7', 'P7', 'O1', 'F3', 'C3', 'P3', 'FP2', 'F4', 
+                      'C4', 'P4', 'O2', 'F8', 'T8', 'P8', 'FZ', 'CZ', 'PZ', 'FT9', 'FT10')
 FS = 256
 
 
